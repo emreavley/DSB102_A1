@@ -1,7 +1,20 @@
 """
 Author: Josh Edward
 Created: 16/09/26 10:30am
-Last Modified: 16/09/26 11:45am
+Last Modified: 16/09/26 01:45pm
+
+TLDR: The best OLS model is a standard additive model (no interaction terms), assumptions are satisfied. Below is the table
+containing the relevant info:
+
+==============================================================================
+                 coef    std err          t      P>|t|      [0.025      0.975]
+------------------------------------------------------------------------------
+const        320.2934      5.412     59.183      0.000     309.678     330.909
+Week          -0.4015      0.313     -1.281      0.200      -1.016       0.213
+Price         -8.5218      0.416    -20.488      0.000      -9.338      -7.706
+Display       23.5248      1.802     13.053      0.000      19.990      27.060
+Media         28.3744      2.071     13.699      0.000      24.312      32.437
+
 Description: A rough working document for the assignment. My goal is try and figure out the model. I don't think the code from this
 should be used for the Assignment (Maybe the code cleaning). Feel free to copy any parts (or download the file) if you find them helpful.
 """
@@ -11,6 +24,7 @@ import statsmodels.api as sm
 import matplotlib.pyplot as plt
 import numpy as np
 from statsmodels.stats.outliers_influence import variance_inflation_factor
+import patsy
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -203,4 +217,72 @@ df["Studentised_Residuals"] = studentised_residuals
 # We get 0 observations that are both leverage points and studentised residuals. 
 
 # I have only just learnt the below is a thing
-print(influence.summary_frame())
+# print(influence.summary_frame())
+# Its not helpful, just a huge dataframe with all these diagnostics in it. 
+
+# Ok so lets try adding interaction terms. 
+# As there are alot of possible interaction terms I am going to use stepwise regression to reduce the number of interaction terms in the 
+# final model
+
+# Something that is kinda rude is that python/sm does not have stepwise regression built into it which is pretty cringe. Going to have
+# to write the logic myself. 
+
+def AICStepwiseSelector(df):
+    formula = "Sales ~ Week * Price * Media * Display"
+    y, X = patsy.dmatrices(formula, data=df, return_type='dataframe')
+    # print(X.columns)
+    best_model = sm.OLS(y, X).fit()
+    best_aic =  best_model.aic
+    while True:
+        features = [i for i in X.columns if ":" in i ]
+        if len(features) == 0:
+            break
+        feature_to_drop = None
+        for feature in features:
+            X_temp = X.drop(columns=feature)
+            temp_model = sm.OLS(y, X_temp).fit()
+            if temp_model.aic < best_aic:
+                best_model = temp_model
+                best_aic = temp_model.aic
+                feature_to_drop = feature
+        if feature_to_drop != None:
+            X = X.drop(columns=feature_to_drop)
+        else:
+            break
+
+    return best_model
+
+
+        
+
+best_lr = AICStepwiseSelector(df)
+# print(best_lr.summary())
+# print(lr_no_interaction.rsquared_adj)
+
+# This also has an adj r-squared of 0.344 (no interaction model is 0.342). That seems to be as good as we are going to get. It also dropped the media column because
+# the code above isn't correct but its good enough to demonstrate the point. The best model does not include interactions.
+
+print(lr_no_interaction.summary())
+formula = "Sales ~ Week + Price + Media + Display + Week:Display + Price:Display + Week:Price:Display"
+yt, Xt = patsy.dmatrices(formula, data=df, return_type='dataframe')
+test_model = sm.OLS(yt, Xt).fit()
+# print(test_model.summary())
+
+# Ok so the above is actually my favourite model, it contains only statistically significant interactions (p<0.05) from the best AIC model 
+# while only sacrificing 0.007 in the adj rsquared. I think this is our best understanding of the data. There are some interesting ideas 
+# here Display becomes more important the higher the week and so does the same is true about price.
+
+# I want to see how close each predicted value is to each actual value
+f, a = plt.subplots(2,1)
+a[0].scatter(lr_no_interaction.fittedvalues, lr_no_interaction.resid)
+a[0].axhline(0)
+a[0].set_title("Fitted vs Residuals: No Interaction")
+
+a[1].scatter(test_model.fittedvalues, test_model.resid)
+a[1].axhline(0)
+a[1].set_title("Fitted vs Residuals: Interactions")
+
+# plt.show()
+
+# The best OLS model is a model with no interaction terms
+
