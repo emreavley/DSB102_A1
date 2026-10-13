@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
 Original file is located at
     https://colab.research.google.com/drive/17rJFs68jZJH_QAeJLA0ZNSGce1Q2GoTG
+
+# SUMMARY
+# Actual sales: [278, 175, 355, 259, 144, 181, 262, 181, 316, 291] ... (truncated for display)
+# Predicted sales: [252.07 229.96 282.28 225.67 255.47 231.08 253.57 239.05 261.42 250.63] ... (truncated for display)
+# Mean Absolute Error (MAE): 30.87
+# Root Mean Squared Error (RMSE): 38.28
+
 """
 
 import pandas as pd
