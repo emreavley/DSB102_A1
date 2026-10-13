@@ -36,6 +36,13 @@ r2_te  = 1 - np.sum((y_te - y_hat)**2) / np.sum((y_te - y_te.mean())**2)
 mse_te = mean_squared_error(y_te, y_hat)
 print(f"Price + Display + Media  — Test MSE: {mse_te:.3f}  RMSE: {np.sqrt(mse_te):.3f}  R²: {r2_te:.3f}")
 print("MSE = mean squared residual (same units²); R² = fraction of variance explained (0–1)")
+loss = mean_absolute_error(
+    y_te, 
+    y_hat, 
+    sample_weight=None, 
+    multioutput='uniform_average'
+)
+print(f"Price + Display + Media  — Test MAE: {loss:.3f}")
 
 
 
@@ -54,6 +61,7 @@ r2_te2  = 1 - np.sum((y_te2 - y_hat2)**2) / np.sum((y_te2 - y_te2.mean())**2)
 mse_te2 = mean_squared_error(y_te2, y_hat2)
 print(f"Price + Display  — Test MSE: {mse_te2:.3f}  RMSE: {np.sqrt(mse_te2):.3f}  R²: {r2_te2:.3f}")
 print("MSE = mean squared residual (same units²); R² = fraction of variance explained (0–1)")
+
 
 
 
