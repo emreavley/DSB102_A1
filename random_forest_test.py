@@ -8,6 +8,8 @@ Original file is located at
 # Mean Absolute Error (MAE): 30.87
 # Root Mean Squared Error (RMSE): 38.28
 
+# This model is overforecasting by 6.59 units
+
 """
 
 import pandas as pd
@@ -60,3 +62,24 @@ RSME = np.sqrt(mean_squared_error(Y_test, predictions))
 
 print(f"Mean Absolute Error (MAE): {MAE:.2f}")
 print(f"Root Mean Squared Error (RMSE): {RSME:.2f}")
+
+##########################################################
+# Fine tuning
+parameters = {"max_depth": range(2,20), "n_estimators": range(100, 1000)}
+
+##########################################################
+ # Looking at under/over forecasting
+
+ # 1. Define your actual and predicted (forecasted) values
+actual = np.array(Y_test)[:10]
+forecast = np.array(predictions.round(2))[:10]
+
+# 2. Calculate the raw forecast errors
+# Note: actual - forecast is the standard convention
+errors = actual - forecast
+
+# 3. Calculate Mean Forecast Error (MFE)
+mfe = np.mean(errors)
+
+print(f"Forecast Errors: {errors}")
+print(f"Mean Forecast Error (Bias): {mfe: .2f}")
