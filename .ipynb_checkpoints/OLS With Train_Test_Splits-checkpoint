@@ -1,0 +1,100 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score, mean_squared_error
+import warnings; warnings.filterwarnings('ignore')
+df = pd.read_csv('retail_dynamics_weekly_sales.csv')
+df['Display'] = df['Display'].str.strip().str.lower().str[0].map({'y':1, 'n': 0})
+df.head()
+sales = df.pivot_table(index = 'Week',
+                       columns='StoreID', values='Sales', 
+                       aggfunc='sum')
+#sales.plot(figsize=(10, 5))
+#plt.xlabel('Week')
+#plt.ylabel('Sales')
+#plt.title('Weekly sales by store')
+#plt.tight_layout()
+#plt.show()
+model = smf.ols('Sales ~ Price + Display + Media', data=df).fit()
+
+
+# 80/20 Train/Test Split with Price + Display + Media
+model_x = sm.add_constant(df[['Price', 'Display', 'Media']])
+model_y = df['Sales']
+model = sm.OLS (model_y, model_x).fit()
+#print(model.summary())
+print(f"R² = {model.rsquared:.3f}   RSE = {np.sqrt(model.mse_resid):.2f}")
+X_tr, X_te, y_tr, y_te = train_test_split(model_x, model_y, test_size=0.2, random_state=0)
+m_tr = sm.OLS(y_tr, X_tr).fit()
+y_hat = m_tr.predict(X_te)
+print(f"Price + Display + Media  — Test RMSE: {np.sqrt(mean_squared_error(y_te, y_hat)):.3f}")
+r2_te  = 1 - np.sum((y_te - y_hat)**2) / np.sum((y_te - y_te.mean())**2)
+mse_te = mean_squared_error(y_te, y_hat)
+print(f"Price + Display + Media  — Test MSE: {mse_te:.3f}  RMSE: {np.sqrt(mse_te):.3f}  R²: {r2_te:.3f}")
+print("MSE = mean squared residual (same units²); R² = fraction of variance explained (0–1)")
+loss = mean_absolute_error(
+    y_te, 
+    y_hat, 
+    sample_weight=None, 
+    multioutput='uniform_average'
+)
+print(f"Price + Display + Media  — Test MAE: {loss:.3f}")
+
+
+
+# 80/20 Train/Test Split with Price + Display
+model_2 = smf.ols('Sales ~ Price + Display', data=df).fit()
+model_2_x = sm.add_constant(df[['Price', 'Display']])
+model_2_y = df['Sales']
+model = sm.OLS (model_2_y, model_2_x).fit()
+#print(model_2.summary())
+print(f" Without Train/Test Split R² = {model_2.rsquared:.3f}   RSE = {np.sqrt(model_2.mse_resid):.2f}")
+X_tr2, X_te2, y_tr2, y_te2 = train_test_split(model_2_x, model_2_y, test_size=0.2, random_state=0)
+m_tr2 = sm.OLS(y_tr2, X_tr2).fit()
+y_hat2 = m_tr2.predict(X_te2)
+print(f"Price + Display — Test RMSE: {np.sqrt(mean_squared_error(y_te2, y_hat2)):.3f}")
+r2_te2  = 1 - np.sum((y_te2 - y_hat2)**2) / np.sum((y_te2 - y_te2.mean())**2)
+mse_te2 = mean_squared_error(y_te2, y_hat2)
+print(f"Price + Display  — Test MSE: {mse_te2:.3f}  RMSE: {np.sqrt(mse_te2):.3f}  R²: {r2_te2:.3f}")
+print("MSE = mean squared residual (same units²); R² = fraction of variance explained (0–1)")
+
+
+
+
+# 80/20 Train/Test Split with Price + Media
+model_3 = smf.ols('Sales ~ Price + Media', data=df).fit()
+model_3_x = sm.add_constant(df[['Price', 'Media']])
+model_3_y = df['Sales']
+model = sm.OLS (model_3_y, model_3_x).fit()
+#print(model_2.summary())
+print(f" Without Train/Test Split R² = {model_3.rsquared:.3f}   RSE = {np.sqrt(model_3.mse_resid):.2f}")
+X_tr3, X_te3, y_tr3, y_te3 = train_test_split(model_3_x, model_3_y, test_size=0.2, random_state=0)
+m_tr3 = sm.OLS(y_tr3, X_tr3).fit()
+y_hat3 = m_tr3.predict(X_te3)
+print(f"Price + Media — Test RMSE: {np.sqrt(mean_squared_error(y_te3, y_hat3)):.3f}")
+r2_te3  = 1 - np.sum((y_te3 - y_hat3)**2) / np.sum((y_te3 - y_te3.mean())**2)
+mse_te3 = mean_squared_error(y_te3, y_hat3)
+print(f"Price + Media  — Test MSE: {mse_te3:.3f}  RMSE: {np.sqrt(mse_te3):.3f}  R²: {r2_te3:.3f}")
+print("MSE = mean squared residual (same units²); R² = fraction of variance explained (0–1)")
+
+
+
+# 80/20 Train/Test Split with Display + Media
+model_4 = smf.ols('Sales ~ Display + Media', data=df).fit()
+model_4_x = sm.add_constant(df[['Display', 'Media']])
+model_4_y = df['Sales']
+model = sm.OLS (model_4_y, model_4_x).fit()
+#print(model_2.summary())
+print(f" Without Train/Test Split R² = {model_4.rsquared:.3f}   RSE = {np.sqrt(model_4.mse_resid):.2f}")
+X_tr4, X_te4, y_tr4, y_te4 = train_test_split(model_4_x, model_4_y, test_size=0.2, random_state=0)
+m_tr4 = sm.OLS(y_tr4, X_tr4).fit()
+y_hat4 = m_tr4.predict(X_te4)
+print(f"Display + Media — Test RMSE: {np.sqrt(mean_squared_error(y_te4, y_hat4)):.3f}")
+r2_te4  = 1 - np.sum((y_te4 - y_hat4)**2) / np.sum((y_te4 - y_te4.mean())**2)
+mse_te4 = mean_squared_error(y_te4, y_hat4)
+print(f"Display + Media  — Test MSE: {mse_te4:.3f}  RMSE: {np.sqrt(mse_te4):.3f}  R²: {r2_te4:.3f}")
+print("MSE = mean squared residual (same units²); R² = fraction of variance explained (0–1)")
